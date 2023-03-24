@@ -5,7 +5,7 @@
 
 -------------CONTROLS---------------
 local KEY_PRINT_LIST = "E"
-local KEY_TELEPORT = "T"
+--local KEY_TELEPORT = "T"
 local KEY_INCREASE_RANGE = "Up"
 local KEY_DECREASE_RANGE = "Down"
 local KEY_TOGGLE_RENDER = "R"
@@ -63,7 +63,7 @@ local emuScreenYOffset = 0
 local gameFrameDelay = 3
 local gameFOV = 58.5
 local screenYStretch = 0.978
-local posRenderDistance = 100
+local posRenderDistance = 100 --Render distance for all points, regardless of object type
 local trigRenderDistance = 30
 local screenClippingDist = 0.3
 
@@ -114,7 +114,7 @@ local modes = {
 		["Type"] = "ITEM"
 	},
 	{
-		["Name"] = "Items Close to Player",
+		["Name"] = "Items (Close to Player)",
 		["Type"] = "ITEM"
 	},
 	{
@@ -126,7 +126,7 @@ local modes = {
 		["Type"] = "ITEM"
 	},
 	{
-		["Name"] = "Triggers (Only On-Screen)",
+		["Name"] = "Triggers",
 		["Type"] = "TRIG"
 	},
 }
@@ -1006,7 +1006,7 @@ local function drawCamera()
 	if renderEnabled == true then
 		gui.drawText(0, textOffset, "Only rendering to screen.", 0xffa0ffa0, nil, titleTextSize)
 	else
-		gui.drawText(0, textOffset, "On-screen rendering is off.\nPress " .. keyToggleRender .. " to turn it on.", 0xffc0a0a0, nil, titleTextSize)
+		gui.drawText(0, textOffset, "On-screen rendering is off.\nPress " .. KEY_TOGGLE_RENDER .. " to turn it on.", 0xffc0a0a0, nil, titleTextSize)
 	end
 	textOffset = textOffset + 70
 	
@@ -1035,13 +1035,13 @@ end
 local function drawTriggers()
 	textOffset = textOffset + 20
 	
-	gui.drawText(0, textOffset, string.format("gpSE_TriggerList: 0x%x", memory.read_u32_be(gpSE_TriggerList)))
+	gui.drawText(0, textOffset, string.format("gpSE_TriggerList: 0x%x", bit.band(memory.read_u32_be(gpSE_TriggerList), 0xFFFFFF)))
 	textOffset = textOffset + 15
 	gui.drawText(0, textOffset, string.format("pnt_trigListBase: 0x%x", pnt_trigListBase))
 	textOffset = textOffset + 30
 	
 	for i, trig in ipairs(trigList) do
-		if isInRange(trig.Position, cameraPos, trigRenderDistance) then
+		if isInRange(trig.Position, cameraPos, trigRenderDistance) and textOffset < (screenDim.Y-itemDisplaySize) then
 			drawTrigGeneric(trig)
 		end
 		if textOffset > client.screenheight() then break end
@@ -1077,8 +1077,8 @@ local function drawTopTextClose()
 	gui.drawText(0, textOffset+localTextOffset, "Showing items within " .. tostring(showCloseRange) .. "\nunits of the Player.")
 	localTextOffset = localTextOffset + 30
 	
-	gui.drawText(0, textOffset+localTextOffset, "Press " .. KEY_TELEPORT .. " to teleport listed items to\nthe player.")
-	localTextOffset = localTextOffset + 30
+	--gui.drawText(0, textOffset+localTextOffset, "Press " .. KEY_TELEPORT .. " to teleport listed items to\nthe player.")
+	--localTextOffset = localTextOffset + 30
 	gui.drawText(0, textOffset+localTextOffset, "Press " .. KEY_INCREASE_RANGE .. " to increase distance,\n" .. KEY_DECREASE_RANGE .. " to decrease.")
 	localTextOffset = localTextOffset + 30
 end
