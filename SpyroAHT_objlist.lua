@@ -403,27 +403,21 @@ local function getItemID(itemPointer)
 end
 
 local function teleportItemAnimator(item)
-	local pnt_itemAnimator = bit.band(memory.read_u32_be(item.Address+0x144), 0xFFFFFF)
-	local hasAnimator = true
+	local pnt_itemAnimator = memory.read_u32_be(item.Address+0x144)
+	if bit.band(pnt_itemAnimator, 0x80000000) ~= 0x80000000 then return false end
+	pnt_itemAnimator = bit.band(pnt_itemAnimator, 0xFFFFFF)
 	
-	if bit.band(pnt_itemAnimator, 0x80000000) == 0x80000000 then
-		if (memory.readfloat(pnt_itemAnimator + 0xc0, true) ~= 0 and
-		memory.readfloat(pnt_itemAnimator + 0xc0, true) ~= 0 and
-		memory.readfloat(pnt_itemAnimator + 0xc0, true) ~= 0) then
-			
-			memory.writefloat(pnt_itemAnimator + 0xc0, item.Position.X, true)
-			memory.writefloat(pnt_itemAnimator + 0xc4, item.Position.Y, true)
-			memory.writefloat(pnt_itemAnimator + 0xc8, item.Position.Z, true)
-		else
-			hasAnimator = false
-		end
+	if (memory.readfloat(pnt_itemAnimator + 0xc0, true) ~= 0 and
+	memory.readfloat(pnt_itemAnimator + 0xc0, true) ~= 0 and
+	memory.readfloat(pnt_itemAnimator + 0xc0, true) ~= 0) then
+		
+		memory.writefloat(pnt_itemAnimator + 0xc0, item.Position.X, true)
+		memory.writefloat(pnt_itemAnimator + 0xc4, item.Position.Y, true)
+		memory.writefloat(pnt_itemAnimator + 0xc8, item.Position.Z, true)
+		return true
 	else
-		hasAnimator = false
+		return false
 	end
-	
-	--if hasAnimator == false then
-	--	console.log(string.format("Item '%s' at 0x%x had no animator pointer at offset 0x144.", itemList[inputIndex]["ID"], itemList[inputIndex]["Address"]))
-	--end
 end
 
 local function teleportToHero(item)
@@ -433,30 +427,33 @@ local function teleportToHero(item)
 	item.Position.Y ~= 0 and
 	item.Position.Z ~= 0 and
 	item.Camera == false) then
-		memory.writefloat(item.Address + 0xD0, HeroPos.X, true);
-		memory.writefloat(item.Address + 0xD4, HeroPos.Y, true);
-		memory.writefloat(item.Address + 0xD8, HeroPos.Z, true);
-		memory.writefloat(item.Address + 0xE0, HeroPos.Pitch, true);
-		memory.writefloat(item.Address + 0xE4, HeroPos.Yaw, true);
-		memory.writefloat(item.Address + 0xE8, HeroPos.Roll, true);
+		memory.writefloat(item.Address + 0xD0, HeroPos.X, true)
+		memory.writefloat(item.Address + 0xD4, HeroPos.Y, true)
+		memory.writefloat(item.Address + 0xD8, HeroPos.Z, true)
+		memory.writefloat(item.Address + 0xE0, HeroPos.Pitch, true)
+		memory.writefloat(item.Address + 0xE4, HeroPos.Yaw, true)
+		memory.writefloat(item.Address + 0xE8, HeroPos.Roll, true)
 		
 		--Needed, as static items don't update their animators every frame
-		teleportItemAnimator(item);
+		local hasAnimator = teleportItemAnimator(item)
+		if not hasAnimator then
+			console.log("Item "..item.ID.." (0x"..bizstring.hex(item.Address)..") had no animator attached")
+		end
 	end
 end
 
 local function doScroll()
 	if currWheel < lastWheel then
-		startIndex = startIndex + 1;
+		startIndex = startIndex + 1
 	elseif currWheel > lastWheel then
-		startIndex = startIndex - 1;
+		startIndex = startIndex - 1
 	end
 end
 
 local function doTeleportClose()
 	for i, item in pairs(itemList) do
 		if isInRange(item.Position, findHeroPos(), showCloseRange) then
-			teleportToHero(item);
+			teleportToHero(item)
 		end
 	end
 end
@@ -464,7 +461,7 @@ end
 local function doTeleportSpecific()
 	for i, item in pairs(itemList) do
 		if item.ID == specificItem then
-			teleportToHero(item);
+			teleportToHero(item)
 		end
 	end
 end
@@ -473,12 +470,12 @@ local function doChangeCloseRange()
 	if currKeyInput[KEY_INCREASE_RANGE] and lastKeyInput[KEY_INCREASE_RANGE] ~= true then
 		showCloseRange = showCloseRange + 1
 		if showCloseRange > 100 then
-			showCloseRange = 100;
+			showCloseRange = 100
 		end
 	elseif currKeyInput[KEY_DECREASE_RANGE] and lastKeyInput[KEY_DECREASE_RANGE] ~= true then
 		showCloseRange = showCloseRange - 1
 		if showCloseRange < 1 then
-			showCloseRange = 1;
+			showCloseRange = 1
 		end
 	end
 end
@@ -487,10 +484,10 @@ local function doToggleRender()
 	if currKeyInput[KEY_TOGGLE_RENDER] and lastKeyInput[KEY_TOGGLE_RENDER] ~= true then
 		if renderEnabled then
 			renderEnabled = false;
-			forms.setproperty(checkRenderToggle, "Checked", false);
+			forms.setproperty(checkRenderToggle, "Checked", false)
 		else
 			renderEnabled = true;
-			forms.setproperty(checkRenderToggle, "Checked", true);
+			forms.setproperty(checkRenderToggle, "Checked", true)
 		end
 	end
 end
